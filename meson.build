@@ -179,6 +179,7 @@ else
 endif
 
 dep_pthread = cc.find_library('pthread')
+dep_dbus = dependency('dbus-1')
 
 vk_api_xml = files('modules/Vulkan-Docs/xml/vk.xml')
 vk_layer_table_helpers = []

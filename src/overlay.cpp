@@ -49,10 +49,11 @@
 #include "keybinds.h"
 #include "cpu.h"
 #include "loaders/loader_nvml.h"
+#include "dbus_info.h"
 
 bool open = false, displayHud = true;
 string gpuString;
-float offset_x, offset_y, hudSpacing;
+float offset_x, offset_y, hudSpacing, hudTicker = 200;
 int hudFirstRow, hudSecondRow;
 const char* offset_x_env = std::getenv("X_OFFSET");
 const char* offset_y_env = std::getenv("Y_OFFSET");
@@ -917,8 +918,9 @@ static void snapshot_swapchain_frame(struct swapchain_data *data)
           elapsed >= instance_data->params.fps_sampling_period) {
             cpuStats.UpdateCPUData();
             cpuLoadLog = cpuStats.GetCPUDataTotal().percent;
-            pthread_create(&cpuInfoThread, NULL, &cpuInfo, NULL);
-            
+            // pthread_create(&cpuInfoThread, NULL, &cpuInfo, NULL);
+            spotifyMetadata();
+             
             // get gpu usage
             if (device_data->properties.vendorID == 0x10de)
                pthread_create(&nvidiaSmiThread, NULL, &getNvidiaGpuInfo, NULL);
@@ -1188,6 +1190,27 @@ static void compute_swapchain_display(struct swapchain_data *data)
                                  NULL, min_time, max_time,
                                  ImVec2(ImGui::GetContentRegionAvailWidth(), 50));
          }
+         ImGui::Dummy(ImVec2(0.0f, 20.0f));
+         ImGui::PushFont(font1);
+         ImGui::Text("");
+         ImGui::SameLine(0,0);
+         ImGui::Text("%s", spotify.title);
+         ImGui::GetContentRegionAvailWidth();
+         hudTicker -= 0.1;
+         for (int i = 0; i < spotify.artists.size(); i++){
+            if (i > 1 || spotify.artists[0] != spotify.artists[i]){
+               ImGui::Text("%s", spotify.artists[i]);
+            } else {
+               ImGui::Text("%s", spotify.artists[i]);
+            }
+            ImGui::SameLine(0, 0.0f);
+            if (spotify.artists[i] != spotify.artists[spotify.artists.size() - 1]){
+               ImGui::Text(",");
+            }
+            if (i < spotify.artists.size())
+               ImGui::SameLine(0, 1.0f);
+         }
+         ImGui::PopFont();
          ImGui::PopStyleColor();
       }
       data->window_size = ImVec2(data->window_size.x, ImGui::GetCursorPosY() + 10.0f);
